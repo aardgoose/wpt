@@ -1,0 +1,23 @@
+<!doctype html>
+<title>Tests that portals respect the frame-src</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<body>
+</body>
+<script>
+  async_test(function(t) {
+    var bc = new BroadcastChannel("simple-portal");
+    bc.onmessage = t.unreached_func("Portal should not load.");
+
+    var w = window.open("resources/frame-src.sub.html?policy=none");
+    w.onload = function() {
+      w.document.addEventListener("securitypolicyviolation",
+        t.step_func_done(function(e) {
+          assert_equals("frame-src", e.violatedDirective);
+      }));
+      var portal = w.document.createElement("portal");
+      portal.src = new URL("/portals/resources/simple-portal.html", location.href);
+      w.document.body.appendChild(portal);
+    }
+  }, "Tests that a portal can't be loaded when it violates frame-src");
+</script>
